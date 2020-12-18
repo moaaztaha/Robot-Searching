@@ -1,6 +1,8 @@
 # modules
 import pygame
 from queue import PriorityQueue
+import time
+import math
 
 
 WIDTH = 800
@@ -96,7 +98,8 @@ class Spot:
 def h(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
-    return abs(x1 - x2) + abs(y1 - y2)
+    #return abs(x1 - x2) + abs(y1 - y2)
+    return math.sqrt((y2-y1)**2 + (x2-x1)**2)
 
 def reconstruct_path(came_from, current, draw):
     while current in came_from:
@@ -121,30 +124,40 @@ def algorithm(draw, grid, start , end):
             if event.type == pygame.QUIT:
                 pygame.quit()
         
-        current = open_set.get()[2]
-        open_set_hash.remove(current)
+        # get the node on the top (the one with the shortest F score)
+        current_list = open_set.get()
+        current = current_list[2]
+
+        open_set_hash.remove(current) 
 
         # if we found the target
         if current == end:
             reconstruct_path(came_from, end, draw)
             end.make_end()
+            start.make_start()
             return True
 
-        # the algo
+        # Going through all the neighbors of the current node, calculating the g, f scores and adding them to the PriorityQueue
         for neighbor in current.neighbors:
-            temp_g_score = g_score[current] + 1
+            temp_g_score = g_score[current] + 1 # the current g_score + 1
             
+            # if our temp g_score for the neighbor node  < the neighbor's g_score: shortest path
             if temp_g_score < g_score[neighbor]:
-                came_from[neighbor] = current
-                g_score[neighbor] = temp_g_score
-                f_score[neighbor] = temp_g_score + h(neighbor.get_pos(), end.get_pos())
-                if neighbor not in open_set_hash:
+                came_from[neighbor] = current # update the came_from dictionary
+                g_score[neighbor] = temp_g_score # update the neighbor's g_score 
+                f_score[neighbor] = temp_g_score + h(neighbor.get_pos(), end.get_pos()) # calculates the neighbor's new f_score
+                if neighbor not in open_set_hash: # if not in the PriorityQueue: Add it
                     count += 1
-                    open_set.put((f_score[neighbor], count, neighbor))
+                    open_set.put((f_score[neighbor], count, neighbor)) # put the node in the PriorityQueue
                     open_set_hash.add(neighbor)
                     neighbor.make_open()
+        
+        print(f'F_score: {current_list[0]} \t Count: {current_list[1]} \t x: {current.get_pos()[0]} \t y: {current.get_pos()[1]}')
+        print('_'*50)
+        #time.sleep(10)
         draw()
 
+        # if it's not the start node, close it
         if current != start:
             current.make_closed()
     
@@ -194,7 +207,7 @@ def get_clicked_pos(pos, rows, width):
     return row, col
 
 def main(win, width):
-    ROWS = 50
+    ROWS = 10
     grid = make_grid(ROWS, width)
 
     start = None
