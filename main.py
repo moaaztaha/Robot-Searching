@@ -1,6 +1,6 @@
 # modules
 import pygame
-from queue import PriorityQueue
+from queue import PriorityQueue, Queue
 import time
 import math
 
@@ -164,6 +164,37 @@ def algorithm(draw, grid, start , end):
     return False
 
 
+def bfs(draw, grid, start, end):
+    came_from = {}
+    q = Queue()
+    q.put(start)
+
+    visited = [start]
+
+    current = None
+
+    while not q.empty(): 
+        current = q.get()
+        for neighbor in current.neighbors:
+            if neighbor not in visited:
+                q.put(neighbor)
+                visited.append(neighbor)
+                came_from[neighbor] = current
+                neighbor.make_open()
+                time.sleep(.1)
+
+        if current != start:
+            current.make_closed()
+        draw()
+
+        if current == end:
+            reconstruct_path(came_from, end, draw)
+            end.make_end()
+            start.make_start()
+            return True   
+        #time.sleep(1)
+    return False
+
 
 def make_grid(rows, width):
     grid = []
@@ -257,7 +288,7 @@ def main(win, width):
                         for spot in row:
                             spot.update_neighbors(grid)
 
-                    algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
+                    bfs(lambda: draw(win, grid, ROWS, width), grid, start, end)
                 
                 # clearing the grid
                 if event.key == pygame.K_c:
