@@ -113,6 +113,17 @@ def reconstruct_path(came_from, current, draw):
         current.make_path()
         draw()
 
+def closest_box(current):
+    min_distance = float('inf')
+    for box in boxes:
+                current_distance = h(box.get_pos(), current.get_pos())
+                if current_distance <= min_distance:
+                    min_distance = current_distance
+                    end = box
+                    box.make_thebox()
+                    for b in boxes: 
+                        if b != box: b.make_end()
+
 def algorithm(draw, grid, start , end):
     count = 0
     open_set = PriorityQueue()
@@ -125,7 +136,6 @@ def algorithm(draw, grid, start , end):
 
     open_set_hash = {start}
     # the closest box
-    min_distance = float('inf')
     while not open_set.empty():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -145,16 +155,15 @@ def algorithm(draw, grid, start , end):
             start.make_start()
             return True
 
-
-
         for box in boxes:
-            current_distance = h(box.get_pos(), current.get_pos())
-            if current_distance <= min_distance:
-                min_distance = current_distance
-                end = box
-                box.make_thebox()
-                for b in boxes: 
-                    if b != box: b.make_end()
+            if current == box:
+                reconstruct_path(came_from, end, draw)
+                end.make_thebox()
+                start.make_start()
+                return True   
+
+        closest_box(current)
+        
 
         # Going through all the neighbors of the current node, calculating the g, f scores and adding them to the PriorityQueue
         for neighbor in current.neighbors:
@@ -215,7 +224,7 @@ def bfs(draw, grid, start, end):
                 # don't re-color boxes
                 if neighbor not in boxes:
                     neighbor.make_open()
-                time.sleep(.2)
+                time.sleep(.1)
 
         if current != start:
             current.make_closed()
@@ -294,7 +303,7 @@ def main(win, width):
                         for spot in row:
                             spot.update_neighbors(grid)
 
-                    bfs(lambda: draw(win, grid, ROWS, width), grid, start, end)
+                    algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end)
                 
                 # clearing the grid
                 if event.key == pygame.K_c:
@@ -346,6 +355,8 @@ def main(win, width):
                     boxes.remove(spot)
                     if end == spot:
                         end = boxes[0]
+
+                print(f'Number of Boxes: {len(boxes)}')
     
     # quit the window if it exits the while loop
     pygame.quit()
