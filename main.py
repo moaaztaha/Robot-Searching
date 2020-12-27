@@ -12,7 +12,7 @@ pygame.display.set_caption("Robot!!")
 # colors 
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 255, 0)
+BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -51,6 +51,9 @@ class Spot:
     def is_end(self):
         return self.color == TURQUOISE
 
+    def is_thebox(self):
+        return self.color == BLUE
+
     def reset(self):
         self.color = WHITE
 
@@ -68,6 +71,9 @@ class Spot:
     
     def make_end(self):
         self.color = TURQUOISE
+    
+    def make_thebox(self):
+        self.color = BLUE
 
     def make_path(self):
         self.color = PURPLE
@@ -118,12 +124,14 @@ def algorithm(draw, grid, start , end):
     f_score[start] = h(start.get_pos(), end.get_pos())
 
     open_set_hash = {start}
-
+    # the closest box
+    min_distance = float('inf')
     while not open_set.empty():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-        
+
+
         # get the node on the top (the one with the shortest F score)
         current_list = open_set.get()
         current = current_list[2]
@@ -133,9 +141,20 @@ def algorithm(draw, grid, start , end):
         # if we found the target
         if current == end:
             reconstruct_path(came_from, end, draw)
-            end.make_end()
+            end.make_thebox()
             start.make_start()
             return True
+
+
+
+        for box in boxes:
+            current_distance = h(box.get_pos(), current.get_pos())
+            if current_distance <= min_distance:
+                min_distance = current_distance
+                end = box
+                box.make_thebox()
+                for b in boxes: 
+                    if b != box: b.make_end()
 
         # Going through all the neighbors of the current node, calculating the g, f scores and adding them to the PriorityQueue
         for neighbor in current.neighbors:
@@ -154,7 +173,7 @@ def algorithm(draw, grid, start , end):
         
         print(f'F_score: {current_list[0]} \t Count: {current_list[1]} \t x: {current.get_pos()[0]} \t y: {current.get_pos()[1]}')
         print('_'*50)
-        #time.sleep(10)
+        time.sleep(.1)
         draw()
 
         # if it's not the start node, close it
@@ -163,7 +182,7 @@ def algorithm(draw, grid, start , end):
     
     return False
 
-
+boxes = []
 def bfs(draw, grid, start, end):
     came_from = {}
     q = Queue()
@@ -175,13 +194,28 @@ def bfs(draw, grid, start, end):
 
     while not q.empty(): 
         current = q.get()
+        
+        # the closest box
+        min_distance = float('inf')
+        for box in boxes:
+            current_distance = h(box.get_pos(), current.get_pos())
+            if current_distance < min_distance:
+                min_distance = current_distance
+                end = box
+                box.make_thebox()
+                for b in boxes: 
+                    if b != box: b.make_end()
+
+
         for neighbor in current.neighbors:
             if neighbor not in visited:
                 q.put(neighbor)
                 visited.append(neighbor)
                 came_from[neighbor] = current
-                neighbor.make_open()
-                time.sleep(.1)
+                # don't re-color boxes
+                if neighbor not in boxes:
+                    neighbor.make_open()
+                time.sleep(.2)
 
         if current != start:
             current.make_closed()
@@ -189,7 +223,7 @@ def bfs(draw, grid, start, end):
 
         if current == end:
             reconstruct_path(came_from, end, draw)
-            end.make_end()
+            end.make_thebox()
             start.make_start()
             return True   
         #time.sleep(1)
@@ -243,7 +277,6 @@ def main(win, width):
 
     start = None
     end = None
-    
 
     run = True
     while run:
@@ -252,34 +285,7 @@ def main(win, width):
             # quitting the window
             if event.type == pygame.QUIT:
                 run = False
-            
-            # mouse events
-            if pygame.mouse.get_pressed()[0]: # left mouse click
-                pos = pygame.mouse.get_pos()
-                row, col = get_clicked_pos(pos, ROWS, width)
-                spot = grid[row][col]
-                
-                if not start and spot != end:
-                    start = spot
-                    start.make_start()
 
-                elif not end and spot != start:
-                    end = spot
-                    end.make_end()
-
-                elif spot != end and spot != start:
-                    spot.make_barrier()
-
-            elif pygame.mouse.get_pressed()[2]: # right mouse click
-                pos = pygame.mouse.get_pos()
-                row, col = get_clicked_pos(pos, ROWS, width)
-                spot = grid[row][col]
-                spot.reset()
-                if spot == start:
-                    start = None
-                elif spot == end:
-                    end = None
-            
             # keyboard events
             if event.type == pygame.KEYDOWN:
                 # the algorithm
@@ -296,9 +302,50 @@ def main(win, width):
                     end = None
                     grid = make_grid(ROWS, width)
 
-            
 
+                # Adding A Robot
+                if event.key == pygame.K_r:
+                    #if pygame.mouse.get_pressed()[0]: # left mouse click
+                    pos = pygame.mouse.get_pos()
+                    row, col = get_clicked_pos(pos, ROWS, width)
+                    spot = grid[row][col]
+                
+                    if not start:
+                        start = spot
+                        start.make_start()
 
+                # Adding boxes
+                if event.key == pygame.K_b:
+                    #if pygame.mouse.get_pressed()[0]: # left mouse click
+                    pos = pygame.mouse.get_pos()
+                    row, col = get_clicked_pos(pos, ROWS, width)
+                    spot = grid[row][col]
+                
+                    end = spot
+                    end.make_end()
+                    boxes.append(end)
+
+                # Adding Barriers
+                if event.key == pygame.K_p:
+                    pos = pygame.mouse.get_pos()
+                    row, col = get_clicked_pos(pos, ROWS, width)
+                    spot = grid[row][col]
+
+                    if spot != start and spot != end:
+                        spot.make_barrier()
+
+            # clearning spots
+            if pygame.mouse.get_pressed()[2]: # right mouse click
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked_pos(pos, ROWS, width)
+                spot = grid[row][col]
+                spot.reset()
+                if spot == start:
+                    start = None
+                elif spot in boxes:
+                    boxes.remove(spot)
+                    if end == spot:
+                        end = boxes[0]
     
     # quit the window if it exits the while loop
     pygame.quit()
