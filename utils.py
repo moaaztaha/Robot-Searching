@@ -2,17 +2,18 @@ import pygame
 import time
 
 # colors 
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-PURPLE = (128, 0, 128)
-ORANGE = (255, 165 ,0)
-GREY = (128, 128, 128)
-TURQUOISE = (64, 224, 208)
-RAL = (49, 79, 111)
+RED = (255, 0, 0) # closed spots
+GREEN = (0, 255, 0) # opened spots
+BLUE = (0, 0, 255) # the current target box
+CORAL = (255, 102, 102) # targets
+WHITE = (255, 255, 255) # normal spots
+BLACK = (0, 0, 0) # barriers
+PURPLE = (128, 0, 128) # path
+ORANGE = (255, 165 ,0) # robot
+GREY = (128, 128, 128) # lines
+TURQUOISE = (64, 224, 208) # boxes
+RAL = (49, 79, 111) # robot with box
+
 
 
 class Spot:
@@ -54,8 +55,14 @@ class Spot:
     def is_free(self):
         return self.free
 
+    def is_target(self):
+        return self.color == CORAL 
+
     def reset(self):
         self.color = WHITE
+
+    def make_target(self):
+        self.color = CORAL
 
     def make_start(self):
         self.color = ORANGE
@@ -154,67 +161,34 @@ def get_clicked_pos(pos, rows, width):
 
     return row, col
 
-def clear_grid(boxes, ROWS, width, grid, all=True, path=True, paths=None):
+def reset_grid(grid):
+    for row in grid:
+        for spot in row:
+            spot.reset()
+    return grid
+
+def clear_grid(grid, all=True, path=True):
     
     start = None
-    new_boxes = []
-    barriers = []
 
     if all:
-        grid = make_grid(ROWS, width)
-        boxes.clear()
-        print(f'Number of Boxes: {len(boxes)}')
+        grid = reset_grid(grid)
     
     else:
         for row in grid:
             for spot in row:
+                if not path and spot.is_path():
+                    continue
+                if not spot.is_target() and not spot.is_end() and not spot.is_barrier() and not spot.is_start():
+                    spot.reset()
+                
                 if spot.is_start():
                     start = spot
-                elif spot in boxes:
-                    new_boxes.append(spot)
-                
-                elif spot.is_barrier():
-                    barriers.append(spot)
 
-        # new grid
-        grid = make_grid(ROWS, width)
-        
-        # start
-        if start:
-            row, col = start.get_pos()
-            start = grid[row][col] 
-            start.make_start()
-
-        # boxes
-        boxes.clear()
-        for b in new_boxes:
-            row, col = b.get_pos()
-            spot = grid[row][col]
-            spot.make_end()
-            boxes.append(spot)
-        print(f'Number of new boxes {len(new_boxes)}')
-        
-        # barriers
-        for b in barriers:
-            row, col = b.get_pos()
-            grid[row][col].make_barrier()
-
-        
-        # paths
-        if not path:
-            new_paths = []
-            for b in paths:
-                row, col = b.get_pos()
-                spot = grid[row][col]
-                spot.make_path()
-                new_paths.append(spot)
-            return start, grid, boxes, new_paths
-
-    return start, grid, boxes
+    return start, grid
 
 
 def walking_robot(draw, robot, path, target, boxes, task=None):
-    
     for b in path:
         # reset
         robot.reset()
@@ -232,7 +206,6 @@ def walking_robot(draw, robot, path, target, boxes, task=None):
             robot.pick_up()
             target.reset()
             boxes.remove(target)
-            #boxes.remove(target)
 
 
 

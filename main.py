@@ -18,7 +18,9 @@ def main(win, width):
 
     start = None
     end = None
+    target = None
     boxes = []
+    targets = []
 
     # default algorithm
     algorithms = itertools.cycle([astar, bfs])
@@ -38,25 +40,23 @@ def main(win, width):
                 # the algorithm
                 if event.key == pygame.K_SPACE and start and len(boxes):
                     # clearing the grid except for start, boxes and barriers
-                    start, grid, boxes = clear_grid(boxes, ROWS, width, grid, all=False)
+                    start, grid = clear_grid(grid, all=False)
                     
                     for row in grid:
                         for spot in row:
                             spot.update_neighbors(grid)
 
-                    path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes)
+                    path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets)
                     # if the algorithm found a path
                     if path:
                         print('got the path')
                         # clear the opened and colosed spots
-                        start, grid, boxes, paths = clear_grid(boxes, ROWS, width, grid, all=False, path=False, paths=path)
+                        start, grid = clear_grid(grid, all=False, path=False)
                         # Walking the robot
-                        # the new end in the new grid
-                        row, col = end.get_pos()
-                        end = grid[row][col]
-                        end.make_thebox()
-                        start, boxes = walking_robot(lambda: draw(win, grid, ROWS, width), start, paths, end, boxes, task='pickup')
-                        end.reset()
+                        start, boxes = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, task='pickup')
+                        # re-coloring the targets
+                        for t in targets:
+                            t.make_target()
                         # switch to searching for target locations
                 
                 # Changing algorithm
@@ -65,12 +65,14 @@ def main(win, width):
                     print(f'Current Algorithm {algorithm.__name__}')
                     # clearing the grid except for start, boxes and barriers
                     time.sleep(0.4)
-                    start, grid, boxes = clear_grid(boxes, ROWS, width, grid, all=False)
+                    start, grid, boxes = clear_grid(boxes, targets, grid, all=False)
 
 
                 # clearing the grid
                 if event.key == pygame.K_c:
-                    start, grid, boxes = clear_grid(boxes, ROWS, width, grid)
+                    start, grid = clear_grid(grid)
+                    boxes.clear()
+                    targets.clear()
 
 
                 # Adding A Robot
@@ -80,7 +82,7 @@ def main(win, width):
                     row, col = get_clicked_pos(pos, ROWS, width)
                     spot = grid[row][col]
                 
-                    if not start and spot not in boxes and not spot.is_barrier():
+                    if not start and spot not in boxes and spot not in targets:
                         start = spot
                         start.make_start()
 
@@ -91,11 +93,23 @@ def main(win, width):
                     row, col = get_clicked_pos(pos, ROWS, width)
                     spot = grid[row][col]
                 
-                    if spot != start and spot != end and spot not in boxes:
+                    if spot != start and spot != end and spot not in boxes and spot not in targets:
                         end = spot
                         end.make_end()
                         boxes.append(end)
                         print(f'Number of Boxes: {len(boxes)}')
+                
+                # Adding Targets
+                if event.key == pygame.K_t:
+                    pos = pygame.mouse.get_pos()
+                    row, col = get_clicked_pos(pos, ROWS, width)
+                    spot = grid[row][col]
+
+                    if spot != start and spot != end and spot not in boxes and spot not in targets:
+                        target = spot
+                        target.make_target()
+                        targets.append(target)
+                        print(f'Number of Targets {len(targets)}')
 
 
                 # Adding Barriers
@@ -104,7 +118,7 @@ def main(win, width):
                     row, col = get_clicked_pos(pos, ROWS, width)
                     spot = grid[row][col]
 
-                    if spot != start and spot not in boxes:
+                    if spot != start and spot not in boxes and spot not in targets:
                         spot.make_barrier()
 
             # clearning spots
@@ -118,8 +132,13 @@ def main(win, width):
                 elif spot in boxes:
                     boxes.remove(spot)
                     end = None
+                elif spot in targets:
+                    targets.remove(spot)
+                    target = None
 
-                print(f'Number of Boxes: {len(boxes)}')
+
+                print(f'Number of Boxes  : {len(boxes)}')
+                print(f'Number of Targets: {len(targets)}')
     
     # quit the window if it exits the while loop
     pygame.quit()

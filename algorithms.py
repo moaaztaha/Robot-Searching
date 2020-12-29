@@ -3,7 +3,7 @@ import pygame
 import time
 import math
 
-def astar(draw, grid, start , end, boxes):
+def astar(draw, grid, start , end, boxes, targets):
     count = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start))
@@ -55,7 +55,7 @@ def astar(draw, grid, start , end, boxes):
                     open_set.put((f_score[neighbor], count, neighbor)) # put the node in the PriorityQueue
                     open_set_hash.add(neighbor)
                     # don't re-color boxes
-                    if neighbor not in boxes:
+                    if neighbor not in boxes and neighbor not in targets:
                         neighbor.make_open()
         
         print(f'F_score: {current_list[0]} \t Count: {current_list[1]} \t x: {current.get_pos()[0]} \t y: {current.get_pos()[1]}')
@@ -71,7 +71,7 @@ def astar(draw, grid, start , end, boxes):
 
 
 
-def bfs(draw, grid, start, end, boxes):
+def bfs(draw, grid, start, end, boxes, targets):
     came_from = {}
     q = Queue()
     q.put(start)
@@ -93,7 +93,7 @@ def bfs(draw, grid, start, end, boxes):
                 visited.append(neighbor)
                 came_from[neighbor] = current
                 # don't re-color boxes
-                if neighbor not in boxes:
+                if neighbor not in boxes and neighbor not in targets:
                     neighbor.make_open()
                 time.sleep(.1)
 
