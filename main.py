@@ -120,9 +120,11 @@ def closest_box(current):
                 if current_distance <= min_distance:
                     min_distance = current_distance
                     end = box
+                    print('New end is assigned')
                     box.make_thebox()
                     for b in boxes: 
                         if b != box: b.make_end()
+    return end
 
 def algorithm(draw, grid, start , end):
     count = 0
@@ -132,6 +134,9 @@ def algorithm(draw, grid, start , end):
     g_score = {spot: float('inf') for row in grid for spot in row}
     g_score[start] = 0
     f_score = {spot: float('inf') for row in grid for spot in row}
+    if end == None:
+        print('Updating end!')
+        end = closest_box(start)
     f_score[start] = h(start.get_pos(), end.get_pos())
 
     open_set_hash = {start}
@@ -162,7 +167,7 @@ def algorithm(draw, grid, start , end):
                 start.make_start()
                 return True   
 
-        closest_box(current)
+        end = closest_box(current)
         
 
         # Going through all the neighbors of the current node, calculating the g, f scores and adding them to the PriorityQueue
@@ -205,15 +210,7 @@ def bfs(draw, grid, start, end):
         current = q.get()
         
         # the closest box
-        min_distance = float('inf')
-        for box in boxes:
-            current_distance = h(box.get_pos(), current.get_pos())
-            if current_distance < min_distance:
-                min_distance = current_distance
-                end = box
-                box.make_thebox()
-                for b in boxes: 
-                    if b != box: b.make_end()
+        end = closest_box(current)
 
 
         for neighbor in current.neighbors:
@@ -298,7 +295,7 @@ def main(win, width):
             # keyboard events
             if event.type == pygame.KEYDOWN:
                 # the algorithm
-                if event.key == pygame.K_SPACE and start and end:
+                if event.key == pygame.K_SPACE and start and len(boxes):
                     for row in grid:
                         for spot in row:
                             spot.update_neighbors(grid)
@@ -310,6 +307,8 @@ def main(win, width):
                     start = None
                     end = None
                     grid = make_grid(ROWS, width)
+                    boxes.clear()
+                    print(f'Number of Boxes: {len(boxes)}')
 
 
                 # Adding A Robot
@@ -333,6 +332,8 @@ def main(win, width):
                     end = spot
                     end.make_end()
                     boxes.append(end)
+                    print(f'Number of Boxes: {len(boxes)}')
+
 
                 # Adding Barriers
                 if event.key == pygame.K_p:
@@ -340,7 +341,7 @@ def main(win, width):
                     row, col = get_clicked_pos(pos, ROWS, width)
                     spot = grid[row][col]
 
-                    if spot != start and spot != end:
+                    if spot != start and spot not in boxes:
                         spot.make_barrier()
 
             # clearning spots
@@ -353,8 +354,7 @@ def main(win, width):
                     start = None
                 elif spot in boxes:
                     boxes.remove(spot)
-                    if end == spot:
-                        end = boxes[0]
+                    end = None
 
                 print(f'Number of Boxes: {len(boxes)}')
     
