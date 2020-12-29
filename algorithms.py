@@ -34,6 +34,7 @@ def astar(draw, grid, start , end, boxes):
             path = reconstruct_path(came_from, end, draw)
             end.make_thebox()
             start.make_start()
+            draw()
             return path, end
 
 
@@ -53,7 +54,9 @@ def astar(draw, grid, start , end, boxes):
                     count += 1
                     open_set.put((f_score[neighbor], count, neighbor)) # put the node in the PriorityQueue
                     open_set_hash.add(neighbor)
-                    neighbor.make_open()
+                    # don't re-color boxes
+                    if neighbor not in boxes:
+                        neighbor.make_open()
         
         print(f'F_score: {current_list[0]} \t Count: {current_list[1]} \t x: {current.get_pos()[0]} \t y: {current.get_pos()[1]}')
         print('_'*50)
@@ -102,6 +105,7 @@ def bfs(draw, grid, start, end, boxes):
             path = reconstruct_path(came_from, end, draw)
             end.make_thebox()
             start.make_start()
+            draw()
             return path, end   
         #time.sleep(1)
     return False

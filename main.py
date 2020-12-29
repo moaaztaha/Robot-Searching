@@ -54,6 +54,7 @@ def main(win, width):
                         # the new end in the new grid
                         row, col = end.get_pos()
                         end = grid[row][col]
+                        end.make_thebox()
                         start, boxes = walking_robot(lambda: draw(win, grid, ROWS, width), start, paths, end, boxes, task='pickup')
                         end.reset()
                         # switch to searching for target locations
