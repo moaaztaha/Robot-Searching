@@ -39,37 +39,43 @@ def main(win, width):
             if event.type == pygame.KEYDOWN:
                 # the algorithm
                 if event.key == pygame.K_SPACE and start and len(boxes):
-                    # clearing the grid except for start, boxes and barriers
-                    start, grid = clear_grid(grid, all=False)
-                    
-                    for row in grid:
-                        for spot in row:
-                            spot.update_neighbors(grid)
+                    # automated process
+                    while len(targets)>0 and len(boxes) > 0:
+                        # clearing the grid except for start, boxes and barriers
+                        start, grid = clear_grid(grid, all=False)
+                        
+                        for row in grid:
+                            for spot in row:
+                                spot.update_neighbors(grid)
 
-                    path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets, 'box')
-                    # if the algorithm found a path
-                    if path:
-                        print('got the path')
-                        # clear the opened and colosed spots
-                        start, grid = clear_grid(grid, all=False, path=False)
-                        # Walking the robot
-                        start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='pickup')
-                        # re-coloring the targets
-                        for t in targets:
-                            t.make_target()
-
-                        # switch to searching for target locations
-                        path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets, 'target')
+                        path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets, 'box')
+                        # if the algorithm found a path
                         if path:
-                            print('got the targets path')
+                            print('got the path')
                             # clear the opened and colosed spots
                             start, grid = clear_grid(grid, all=False, path=False)
                             # Walking the robot
-                            start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='putdown')
+                            start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='pickup')
                             # re-coloring the targets
-                            print(f'Number of targets after the movement: {len(targets)}')
                             for t in targets:
                                 t.make_target()
+                            for b in boxes:
+                                b.make_end()
+
+                            # switch to searching for target locations
+                            path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets, 'target')
+                            if path:
+                                print('got the targets path')
+                                # clear the opened and colosed spots
+                                start, grid = clear_grid(grid, all=False, path=False)
+                                # Walking the robot
+                                start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='putdown')
+                                # re-coloring the targets
+                                print(f'Number of targets after the movement: {len(targets)}')
+                                for t in targets:
+                                    t.make_target()
+                                for b in boxes:
+                                    b.make_end()
 
                 
                 # Changing algorithm
