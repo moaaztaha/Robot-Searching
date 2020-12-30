@@ -3,7 +3,7 @@ import pygame
 import time
 import math
 
-def astar(draw, grid, start , end, boxes, targets):
+def astar(draw, grid, start , end, boxes, targets, goal):
     count = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start))
@@ -12,7 +12,11 @@ def astar(draw, grid, start , end, boxes, targets):
     g_score[start] = 0
     f_score = {spot: float('inf') for row in grid for spot in row}
     print('The First end!')
-    end = closest_box(start, boxes)
+    if goal == 'target':
+        end = closest_box(start, targets, goal)
+    # the closest box
+    else:
+        end = closest_box(start, boxes, goal)
     f_score[start] = h(start.get_pos(), end.get_pos())
 
     open_set_hash = {start}
@@ -38,7 +42,11 @@ def astar(draw, grid, start , end, boxes, targets):
             return path, end
 
 
-        end = closest_box(current, boxes)
+        if goal == 'target':
+            end = closest_box(current, targets, goal)
+        # the closest box
+        else:
+            end = closest_box(current, boxes, goal)
         
 
         # Going through all the neighbors of the current node, calculating the g, f scores and adding them to the PriorityQueue
@@ -58,8 +66,8 @@ def astar(draw, grid, start , end, boxes, targets):
                     if neighbor not in boxes and neighbor not in targets:
                         neighbor.make_open()
         
-        print(f'F_score: {current_list[0]} \t Count: {current_list[1]} \t x: {current.get_pos()[0]} \t y: {current.get_pos()[1]}')
-        print('_'*50)
+        # print(f'F_score: {current_list[0]} \t Count: {current_list[1]} \t x: {current.get_pos()[0]} \t y: {current.get_pos()[1]}')
+        # print('_'*50)
         time.sleep(.1)
         draw()
 
@@ -71,7 +79,7 @@ def astar(draw, grid, start , end, boxes, targets):
 
 
 
-def bfs(draw, grid, start, end, boxes, targets):
+def bfs(draw, grid, start, end, boxes, targets, goal=None):
     came_from = {}
     q = Queue()
     q.put(start)
@@ -83,8 +91,11 @@ def bfs(draw, grid, start, end, boxes, targets):
     while not q.empty(): 
         current = q.get()
         
+        if goal == 'target':
+            end = closest_box(current, targets, goal)
         # the closest box
-        end = closest_box(current, boxes)
+        else:
+            end = closest_box(current, boxes, goal)
 
 
         for neighbor in current.neighbors:
@@ -134,16 +145,20 @@ def reconstruct_path(came_from, current, draw):
     return path
 
 
-def closest_box(current, boxes):
+def closest_box(current, boxes, goal):
     min_distance = float('inf')
     for box in boxes:
                 current_distance = h(box.get_pos(), current.get_pos())
                 if current_distance <= min_distance:
                     min_distance = current_distance
                     end = box
-                    print('New end is assigned')
+                    #print('New end is assigned')
                     box.make_thebox()
                     for b in boxes: 
-                        if b != box: b.make_end()
+                        if b != box: 
+                            if goal == 'target':
+                                b.make_target()
+                            else:
+                                b.make_end()
     return end
 

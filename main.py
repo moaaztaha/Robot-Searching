@@ -46,18 +46,31 @@ def main(win, width):
                         for spot in row:
                             spot.update_neighbors(grid)
 
-                    path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets)
+                    path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets, 'box')
                     # if the algorithm found a path
                     if path:
                         print('got the path')
                         # clear the opened and colosed spots
                         start, grid = clear_grid(grid, all=False, path=False)
                         # Walking the robot
-                        start, boxes = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, task='pickup')
+                        start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='pickup')
                         # re-coloring the targets
                         for t in targets:
                             t.make_target()
+
                         # switch to searching for target locations
+                        path, end = algorithm(lambda: draw(win, grid, ROWS, width), grid, start, end, boxes, targets, 'target')
+                        if path:
+                            print('got the targets path')
+                            # clear the opened and colosed spots
+                            start, grid = clear_grid(grid, all=False, path=False)
+                            # Walking the robot
+                            start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='putdown')
+                            # re-coloring the targets
+                            print(f'Number of targets after the movement: {len(targets)}')
+                            for t in targets:
+                                t.make_target()
+
                 
                 # Changing algorithm
                 if event.key == pygame.K_LCTRL:
@@ -65,7 +78,7 @@ def main(win, width):
                     print(f'Current Algorithm {algorithm.__name__}')
                     # clearing the grid except for start, boxes and barriers
                     time.sleep(0.4)
-                    start, grid, boxes = clear_grid(boxes, targets, grid, all=False)
+                    start, grid = clear_grid(grid, all=False)
 
 
                 # clearing the grid

@@ -60,6 +60,7 @@ class Spot:
 
     def reset(self):
         self.color = WHITE
+        self.free = True
 
     def make_target(self):
         self.color = CORAL
@@ -88,7 +89,7 @@ class Spot:
     def pick_up(self):
         self.free = False
         self.color = RAL 
-
+    
     def put_down(self):
         self.free = True
         self.color = ORANGE
@@ -188,25 +189,41 @@ def clear_grid(grid, all=True, path=True):
     return start, grid
 
 
-def walking_robot(draw, robot, path, target, boxes, task=None):
+def walking_robot(draw, robot, path, target, boxes, targets, task=None):
     for b in path:
         # reset
-        robot.reset()
-        b.make_start()
+        if not robot.is_free():
+            robot.reset()
+            b.pick_up()
+        else:    
+            robot.reset()
+            b.make_start()
         robot = b
         time.sleep(0.1)
         draw()
 
 
-    
     robot = b
+    if task == 'putdown':
+        robot.pick_up()
+
+
+    
     if task == 'pickup':
         # check if the robot is empty
         if robot.is_free():
             robot.pick_up()
             target.reset()
             boxes.remove(target)
+            print(f'Box removed!! Boxes: {len(boxes)}')
+    elif task == 'putdown':
+        if not robot.is_free():
+            robot.put_down()
+            target.make_barrier()
+            targets.remove(target)
+            print(f'Target removed!! Targets: {len(targets)}')
+    else:
+        print(f'Wrong option!! {task}')
 
 
-
-    return robot, boxes
+    return robot, boxes, targets
