@@ -54,6 +54,7 @@ def main(win, width):
                             print('got the path')
                             # clear the opened and colosed spots
                             start, grid = clear_grid(grid, all=False, path=False)
+                            end.make_thebox()
                             # Walking the robot
                             start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='pickup')
                             # re-coloring the targets
@@ -68,6 +69,7 @@ def main(win, width):
                                 print('got the targets path')
                                 # clear the opened and colosed spots
                                 start, grid = clear_grid(grid, all=False, path=False)
+                                end.make_thebox()
                                 # Walking the robot
                                 start, boxes, targets = walking_robot(lambda: draw(win, grid, ROWS, width), start, path, end, boxes, targets, task='putdown')
                                 # re-coloring the targets
