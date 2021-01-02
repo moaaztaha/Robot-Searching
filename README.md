@@ -1,7 +1,8 @@
 # Robot Searching and Moving Boxes Visualization
-### A* Flooding the Grid
+### A* Moving the boxes to the right targets
+
 ![](Robot.gif)
 
-BFS Flooding
+### BFS Flooding
 
 ![](bfs-flooding.gif)
