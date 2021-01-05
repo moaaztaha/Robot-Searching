@@ -5,13 +5,13 @@ from utils import Spot, make_grid, draw, get_clicked_pos, clear_grid, walking_ro
 import itertools
 import time
 
-WIDTH = 1000
+WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
 pygame.display.set_caption("Robot!!")
 
 
 def main(win, width):
-    ROWS = 20
+    ROWS = 10
     grid = make_grid(ROWS, width)
 
     start = None

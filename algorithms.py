@@ -92,6 +92,11 @@ def bfs(draw, grid, start, end, boxes, targets, goal=None):
     current = None
 
     while not q.empty():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+
         current = q.get()
 
         if goal == 'target':
@@ -108,7 +113,7 @@ def bfs(draw, grid, start, end, boxes, targets, goal=None):
                 # don't re-color boxes
                 if neighbor not in boxes and neighbor not in targets:
                     neighbor.make_open()
-                time.sleep(.1)
+                time.sleep(.05)
 
         if current != start:
             current.make_closed()
