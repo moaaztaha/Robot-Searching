@@ -6,3 +6,7 @@
 ### BFS Flooding
 
 ![](bfs-flooding.gif)
+
+
+### Generalization
+![](generalization.gif)
